@@ -70,7 +70,7 @@ class YetiRest {
         $headers = array( 
             'Content-type: application/json', 
             'Accept: application/json',
-            'USER-AGENT : yeti-rest-api/1.0',
+            'User-Agent: yeti-rest-api/1.0',
             'X-ENCRYPTED: 0',
             'X-API-KEY: '.$this->wstoken,
         ); 
