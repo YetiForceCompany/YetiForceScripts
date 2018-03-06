@@ -7,9 +7,20 @@
  * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @version >= 4.3.0
  */
-chdir(__DIR__ . '/../');
-define('IS_PUBLIC_DIR', true);
-require 'include/main/WebUI.php';
+if (file_exists('include/main/WebUI.php')) {
+    include_once 'include/main/WebUI.php';
+} else {
+    chdir(__DIR__ . '/../');
+    if (file_exists('include/main/WebUI.php')) {
+        include_once 'include/main/WebUI.php';
+    } else {
+        chdir(__DIR__ . '/../../');
+        if (file_exists('include/main/WebUI.php')) {
+            include_once 'include/main/WebUI.php';
+        }
+    }
+}
+
 
 $userId = 1;
 $userName = '';
