@@ -1,24 +1,24 @@
 <?php
 /**
  * Password reset
- * @package YetiForce
+ * @package   YetiForce
  * @copyright YetiForce Sp. z o.o.
- * @license YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
- * @author Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
- * @version >= 4.3.0
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ * @version   >= 4.3.0
  */
 if (file_exists('include/main/WebUI.php')) {
-    include_once 'include/main/WebUI.php';
+	include_once 'include/main/WebUI.php';
 } else {
-    chdir(__DIR__ . '/../');
-    if (file_exists('include/main/WebUI.php')) {
-        include_once 'include/main/WebUI.php';
-    } else {
-        chdir(__DIR__ . '/../../');
-        if (file_exists('include/main/WebUI.php')) {
-            include_once 'include/main/WebUI.php';
-        }
-    }
+	chdir(__DIR__ . '/../');
+	if (file_exists('include/main/WebUI.php')) {
+		include_once 'include/main/WebUI.php';
+	} else {
+		chdir(__DIR__ . '/../../');
+		if (file_exists('include/main/WebUI.php')) {
+			include_once 'include/main/WebUI.php';
+		}
+	}
 }
 
 
@@ -36,4 +36,4 @@ $userRecordModel->set('date_password_change', date('Y-m-d H:i:s'));
 $userRecordModel->set('force_password_change', 0);
 $userRecordModel->save();
 
-echo 'User name: ' . $userRecordModel->get('user_name') . ' | Password: ' . $password;
+echo 'Login: ' . $userRecordModel->get('user_name') . '<br>Password: ' . $password . '<br>Full name: ' . $userRecordModel->getName();
