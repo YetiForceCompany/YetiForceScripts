@@ -13,11 +13,11 @@ if (php_sapi_name() !== 'cli') {
 
 require_once('yetirest.php');
 
-$host = 'http://yeti.local/';
+$host = 'https://gitdeveloper.yetiforce.com/';
 // created with settings->integration->webservice applications
-$wsname = 'apiuser';
-$wspass = 'apipass';
-$wstoken = 'PYxjkIFbV6SiMylL9UZoN5Kcgt7nsRhu';
+$wsname = 'portal';
+$wspass = 'portal';
+$wstoken = 'VMUwRByXHSq1bLW485ikfvcC97P6gJsz';
 
 // created with settings->integration->webserice users
 $user = 'demo@yetiforce.com';
@@ -25,7 +25,7 @@ $pass = 'demo';
 
 // demo module and record id
 $module = 'Accounts';
-$id = 101;
+$id = 115;
 
 // create object
 $yr = new YetiRest($host, $wsname, $wspass, $wstoken); 

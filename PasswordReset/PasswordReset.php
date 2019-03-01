@@ -3,7 +3,7 @@
  * Password reset
  * @package   YetiForce
  * @copyright YetiForce Sp. z o.o.
- * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @license   YetiForce Public License 3.0 (yetiforce.com)
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  * @version   >= 4.3.0
  */
@@ -24,11 +24,16 @@ if (file_exists('include/main/WebUI.php')) {
 
 $userId = 1;
 $userName = '';
+$password = '';
+
+
 
 if ($userName) {
 	$userId = \App\User::getUserIdByName($userName);
 }
-$password = \App\Encryption::generateUserPassword();
+if (!$password) {
+	$password = \App\Encryption::generateUserPassword();
+}					
 $userRecordModel = Users_Record_Model::getInstanceById($userId, 'Users');
 $userRecordModel->set('changeUserPassword', true);
 $userRecordModel->set('user_password', $password);
