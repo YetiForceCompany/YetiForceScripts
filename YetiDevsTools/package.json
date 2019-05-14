@@ -1,7 +1,6 @@
 {
-  "name": "YetiForceCRM YetiDevsTools",
-  "keywords": [
-  ],
+  "name": "YetiForceDevsTools",
+  "keywords": [],
   "scripts": {
     "minify-css": "gulp minify-css minify-rc-css",
     "minify-js": "node build.js"
