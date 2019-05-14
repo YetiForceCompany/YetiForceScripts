@@ -1,5 +1,7 @@
 {
   "extends": [
     "config:base"
-  ]
+  ],
+  "rangeStrategy": "update-lockfile",
+  "assignees": ["mariuszkrzaczkowski", "rskrzypczak", "TomaszQr"]
 }
