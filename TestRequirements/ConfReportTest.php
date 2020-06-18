@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * Conf report class.
+ *
+ * @copyright YetiForce Sp. z o.o
+ * @license   YetiForce Public License 3.0 (licenses/LicenseEN.txt or yetiforce.com)
+ * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ */
 ob_start();
 if (file_exists('include/main/WebUI.php')) {
 	include_once 'include/main/WebUI.php';
