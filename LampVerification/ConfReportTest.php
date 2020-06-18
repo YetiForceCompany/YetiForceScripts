@@ -1,5 +1,6 @@
 <?php
 
+ob_start();
 if (file_exists('include/main/WebUI.php')) {
 	include_once 'include/main/WebUI.php';
 } else {
@@ -17,17 +18,16 @@ $startTime = microtime(true);
 
 \App\Utils\ConfReport::$sapi = PHP_SAPI === 'cli' ? 'cron' : 'www';
 
-$return = '<pre>';
+echo '<pre>';
 
-$return .= print_r(\App\Utils\ConfReport::getAllErrors(), true);
+print_r(\App\Utils\ConfReport::getAllErrors());
 
-$return .= ' <hr/>';
-$return .= print_r(\App\Utils\ConfReport::getAll(), true);
+echo' <hr/>';
 
-$return .= ' <hr/>' . \App\Log::getlastLogs(['error', 'warning']);
+print_r(\App\Utils\ConfReport::getAll());
 
-$return .= ' <hr/>' . round(microtime(true) - $startTime, 5) . ' <hr/>';
+echo' <hr/>' . \App\Log::getlastLogs(['error', 'warning']);
 
-file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . basename(__FILE__, '.php') . '_' . \App\Utils\ConfReport::$sapi . '.html', $return);
+echo' <hr/>' . round(microtime(true) - $startTime, 5) . ' <hr/>';
 
-echo $return;
+file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . basename(__FILE__, '.php') . '_' . \App\Utils\ConfReport::$sapi . '.html', ob_get_contents());
