@@ -24,15 +24,15 @@ $startTime = microtime(true);
 
 \App\Utils\ConfReport::$sapi = PHP_SAPI === 'cli' ? 'cron' : 'www';
 
-echo '<pre>';
+echo '<h2>Errors:</h2><pre>';
 
 print_r(\App\Utils\ConfReport::getAllErrors());
 
-echo' <hr/>';
+echo' <hr/><h2>ConfReport:</h2>';
 
 print_r(\App\Utils\ConfReport::getAll());
 
-echo' <hr/>' . \App\Log::getlastLogs(['error', 'warning']);
+echo' </pre><hr/>' . \App\Log::getlastLogs(['error', 'warning']);
 
 echo' <hr/>' . round(microtime(true) - $startTime, 5) . ' <hr/>';
 
