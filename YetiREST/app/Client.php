@@ -18,13 +18,31 @@ class Client
 	 *
 	 * @var array
 	 */
-	private $config;
+	protected $config;
+	/**
+	 * Debug variable.
+	 *
+	 * @var bool
+	 */
+	public $debug = false;
+	/**
+	 * Logs variable.
+	 *
+	 * @var array
+	 */
+	protected $logs = [];
+	/**
+	 * Errors variable.
+	 *
+	 * @var array
+	 */
+	protected $error = [];
 	/**
 	 * The default configuration of GuzzleHttp.
 	 *
 	 * @var array
 	 */
-	private $options = [
+	protected $options = [
 		'headers' => [
 			'User-Agent' => 'YetiForceRestApi',
 		],
@@ -36,10 +54,10 @@ class Client
 	 *
 	 * @var \GuzzleHttp\Client
 	 */
-	private $httpClient;
+	protected $httpClient;
 
 	/**
-	 * init function.
+	 * Init function.
 	 *
 	 *	$api = Client::init([
 	 *	'apiPath' => '',
@@ -73,7 +91,7 @@ class Client
 	}
 
 	/**
-	 * request function.
+	 * Request function.
 	 *
 	 * @param string $method
 	 * @param string $uri
@@ -81,14 +99,44 @@ class Client
 	 *
 	 * @return string
 	 */
-	protected function request(string $method, string $uri = '', array $options = []): string
+	protected function request(string $method, string $uri = '', array $options = [])
 	{
-		$request = $this->httpClient->request($method, $uri, $options);
-		return $request->getBody()->getContents();
+		try {
+			$response = $this->httpClient->request($method, $uri, $options);
+			$body = $response->getBody()->getContents();
+			if ($this->debug) {
+				$this->logs[] = [
+					'uri' => $uri,
+					'method' => $method,
+					'options' => $options,
+					'statusCode' => $response->getStatusCode(),
+					'reasonPhrase' => $response->getReasonPhrase(),
+					'protocol' => $response->getProtocolVersion(),
+					'headers' => array_map(function ($value) {
+						return implode(', ', $value);
+					}, $response->getHeaders()),
+					'responseBody' => $body,
+				];
+			}
+		} catch (\Throwable $th) {
+			$this->error[] = array_merge(
+				[
+					'type' => 'httpClientException',
+					'datetime' => date('Y-m-d H:i:s'),
+					'uri' => $uri,
+					'method' => $method,
+					'message' => $th->getMessage(),
+					'options' => $options,
+				],
+				$this->parserErrorResponse($th)
+			);
+			throw $th;
+		}
+		return $body;
 	}
 
 	/**
-	 * json function.
+	 * Json function.
 	 *
 	 * @param string $method
 	 * @param string $uri
@@ -98,52 +146,92 @@ class Client
 	 */
 	public function json(string $method, string $uri = '', array $data = []): array
 	{
-		return json_decode($this->request($method, $uri, [
+		$return = json_decode($this->request($method, $uri, [
 			'json' => $data
 		]), true);
+		if (isset($return['error'])) {
+			$this->error[] = array_merge(
+				[
+					'type' => 'crmException',
+					'datetime' => date('Y-m-d H:i:s'),
+					'uri' => $uri,
+					'method' => $method,
+					'data' => $data,
+				],
+				$this->parserErrorResponse($return)
+			);
+			throw new \Exception($return['error']['message'], $return['error']['code'] ?? 500);
+		}
+		return $return;
 	}
 
 	/**
-	 * login function.
+	 * Parser error response.
 	 *
-	 * @param string $userName
-	 * @param string $password
+	 * @param array|\GuzzleHttp\Exception\ClientException $error
+	 * @param string                                      $uri
+	 * @param array                                       $options
 	 *
-	 * @return array|null
+	 * @return array
 	 */
-	public function login(string $userName = '', string $password = ''): ?array
+	protected function parserErrorResponse($error): array
 	{
-		if (!$userName) {
-			$userName = $this->config['wsUserName'];
-			$password = $this->config['wsUserPass'];
+		$return = [];
+		if (\is_object($error)) {
+			$return = [
+				'code' => $error->getCode(),
+				'message' => $error->getMessage(),
+			];
+			if (method_exists($error, 'getRequest')) {
+				$return['method'] = $error->getRequest()->getMethod();
+				$return['protocol'] = $error->getRequest()->getProtocolVersion();
+			}
+			if (method_exists($error, 'getResponse')) {
+				$response = $error->getResponse();
+				$body = $response->getBody()->getContents();
+				$return = [
+					'code' => $response->getStatusCode(),
+					'message' => $response->getReasonPhrase(),
+					'headers' => array_map(function ($value) {
+						return implode(', ', $value);
+					}, $response->getHeaders()),
+					'responseBody' => $body,
+				];
+				if (0 === strpos($body, '{"')) {
+					$error = json_decode($body, true);
+					if (isset($error['error'])) {
+						$return['type'] = 'crmException';
+					}
+				}
+			}
 		}
-		$return = $this->json('POST', 'Users/Login', [
-			'userName' => $userName,
-			'password' => $password,
-		]);
-		if (1 == $return['status']) {
-			$options = $this->options;
-			$options['headers']['x-token'] = $return['result']['token'];
-			$this->httpClient = new \GuzzleHttp\Client($options);
-			return $return['result'];
+		if (\is_array($error)) {
+			foreach (['message', 'code', 'file', 'line', 'backtrace', 'previous'] as $key) {
+				if (isset($error['error'][$key])) {
+					$return[$key] = $error['error'][$key];
+				}
+			}
 		}
-		return null;
+		return $return;
 	}
 
 	/**
-	 * logout function.
+	 * Get logs function.
 	 *
-	 * @return bool
+	 * @return array
 	 */
-	public function logout(): bool
+	public function getLogs(): array
 	{
-		$return = $this->json('PUT', 'Users/Logout');
-		if (1 == $return['status']) {
-			$options = $this->options;
-			unset($options['headers']['x-token']);
-			$this->httpClient = new \GuzzleHttp\Client($options);
-			return false;
-		}
-		return false;
+		return $this->logs;
+	}
+
+	/**
+	 * Get errors function.
+	 *
+	 * @return array
+	 */
+	public function getErrors(): array
+	{
+		return $this->error;
 	}
 }
