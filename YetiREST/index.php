@@ -14,14 +14,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 echo '<pre>';
 
-$api = Portal::init([
-	'apiPath' => 'https://gitdeveloper.yetiforce.com/',
-	'wsAppName' => 'portal',
-	'wsAppPass' => 'portal',
-	'wsApiKey' => 'VMUwRByXHSq1bLW485ikfvcC97P6gJsz',
-	'wsUserName' => 'demo@yetiforce.com',
-	'wsUserPass' => 'demo',
-]);
+$api = Portal::init();
 if ($login = $api->login()) {
 	// var_dump($login);
 	print_r($api->listModules());
