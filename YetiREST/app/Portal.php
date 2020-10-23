@@ -52,6 +52,50 @@ class Portal extends Client
 	}
 
 	/**
+	 * Login function.
+	 *
+	 * @param string $userName
+	 * @param string $password
+	 *
+	 * @return array|null
+	 */
+	public function login(string $userName = '', string $password = ''): ?array
+	{
+		if (!$userName) {
+			$userName = $this->config['wsUserName'];
+			$password = $this->config['wsUserPass'];
+		}
+		$return = $this->json('POST', 'Users/Login', [
+			'userName' => $userName,
+			'password' => $password,
+		]);
+		if (1 == $return['status']) {
+			$options = $this->options;
+			$options['headers']['x-token'] = $return['result']['token'];
+			$this->httpClient = new \GuzzleHttp\Client($options);
+			return $return['result'];
+		}
+		return null;
+	}
+
+	/**
+	 * Logout function.
+	 *
+	 * @return bool
+	 */
+	public function logout(): bool
+	{
+		$return = $this->json('PUT', 'Users/Logout');
+		if (1 == $return['status']) {
+			$options = $this->options;
+			unset($options['headers']['x-token']);
+			$this->httpClient = new \GuzzleHttp\Client($options);
+			return false;
+		}
+		return false;
+	}
+
+	/**
 	 * List modules.
 	 *
 	 * @return string[]
