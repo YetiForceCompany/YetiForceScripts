@@ -1,0 +1,45 @@
+{
+  "homepage": "https://yetiforce.com/",
+  "support": {
+    "issues": "https://github.com/YetiForceCompany/YetiForceCRM/issues",
+    "wiki": "https://yetiforce.com/en/documentation.html",
+    "source": "https://github.com/YetiForceCompany/YetiForceCRM"
+  },
+  "authors": [
+    {
+      "name": "YetiForceCompany",
+      "email": "info@yetiforce.com",
+      "homepage": "https://yetiforce.com/"
+    }
+  ],
+  "funding": [
+    {
+      "type": "opencollective",
+      "url": "https://opencollective.com/yetiforcecrm"
+    }
+  ],
+  "require": {
+    "php": ">=7.2",
+    "ext-openssl": "*",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-session": "*",
+    "ext-dom": "*",
+    "ext-mbstring": "*",
+    "ext-fileinfo": "*",
+    "ext-iconv": "*",
+    "ext-intl": "*",
+    "ext-hash": "*",
+    "composer/ca-bundle": "^1.1",
+    "guzzlehttp/guzzle": "^7.0"
+  },
+  "suggest": {
+    "ext-apcu": "Cache meta data in apcu to improve system performance",
+    "ext-opcache": "Improve system performance"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  }
+}
