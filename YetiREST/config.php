@@ -13,4 +13,12 @@ return [
 	'wsApiKey' => 'VMUwRByXHSq1bLW485ikfvcC97P6gJsz',
 	'wsUserName' => 'demo@yetiforce.com',
 	'wsUserPass' => 'demo',
+	'bruteForceDriver' => 'db',
+	'bruteForceDayLimit' => 1000,
+	'logDriver' => 'db',
+	'dbHost' => 'localhost',
+	'dbName' => 'api',
+	'dbPort' => 3306,
+	'dbUser' => 'api',
+	'dbPass' => '',
 ];

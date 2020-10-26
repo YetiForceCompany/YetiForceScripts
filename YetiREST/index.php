@@ -8,14 +8,16 @@
  * @version 1.0
  */
 
-namespace App;
-
 require __DIR__ . '/vendor/autoload.php';
 
 echo '<pre>';
 
-$api = Portal::init();
-if ($login = $api->login()) {
-	// var_dump($login);
-	print_r($api->listModules());
+try {
+	$api = new \App\Portal();
+	$api->debug = true;
+	if ($login = $api->login()) {
+		print_r($api->listModules());
+	}
+} catch (\Throwable $th) {
+	echo $th->__toString();
 }

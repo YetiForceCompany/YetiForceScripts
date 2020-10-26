@@ -13,30 +13,18 @@ namespace App;
  */
 class Client
 {
-	/**
-	 * Config variable.
-	 *
-	 * @var array
-	 */
+	/** @var array Config variable. */
 	protected $config;
-	/**
-	 * Debug variable.
-	 *
-	 * @var bool
-	 */
+	/** @var bool Debug variable. */
 	public $debug = false;
-	/**
-	 * Logs variable.
-	 *
-	 * @var array
-	 */
+	/** @var array Logs variable. */
+	protected $logPath = __DIR__ . '/../logs/';
+	/** @var array Logs variable. */
 	protected $logs = [];
-	/**
-	 * Errors variable.
-	 *
-	 * @var array
-	 */
+	/** @var array Errors variable. */
 	protected $error = [];
+	/** @var \PDO Errors variable. */
+	protected $db;
 	/**
 	 * The default configuration of GuzzleHttp.
 	 *
@@ -71,23 +59,40 @@ class Client
 	 *	$api = Client::init();
 	 *
 	 * @param array|null $config
-	 *
-	 * @return static
 	 */
-	public static function init(?array $config = null)
+	public function __construct(?array $config = null)
 	{
-		$loader = new static();
-		$loader->config = $config ?? (include_once __DIR__ . '/../config.php');
-		if (!empty($loader->config['options']) && \is_array($loader->config['options'])) {
-			$loader->options = array_merge($loader->options, $loader->config['options']);
+		$this->config = $config ?? (include_once __DIR__ . '/../config.php');
+		if (!empty($this->config['options']) && \is_array($this->config['options'])) {
+			$this->options = array_merge($this->options, $this->config['options']);
 		}
+		$this->initDrivers();
 		$caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
-		$loader->options['verify'] = \is_file($caPathOrFile) ? $caPathOrFile : false;
-		$loader->options['base_uri'] = $loader->config['apiPath'] . 'webservice/';
-		$loader->options['auth'] = [$loader->config['wsAppName'], $loader->config['wsAppPass']];
-		$loader->options['headers']['x-api-key'] = $loader->config['wsApiKey'];
-		$loader->httpClient = new \GuzzleHttp\Client($loader->options);
-		return $loader;
+		$this->options['verify'] = \is_file($caPathOrFile) ? $caPathOrFile : false;
+		$this->options['base_uri'] = $this->config['apiPath'] . 'webservice/';
+		$this->options['auth'] = [$this->config['wsAppName'], $this->config['wsAppPass']];
+		$this->options['headers']['x-api-key'] = $this->config['wsApiKey'];
+		$this->httpClient = new \GuzzleHttp\Client($this->options);
+	}
+
+	/**
+	 * Driver initialization.
+	 *
+	 * @return void
+	 */
+	protected function initDrivers(): void
+	{
+		$this->config['logDriver'] = $this->config['logDriver'] ?? 'file';
+		if (('db' === $this->config['logDriver'] || 'db' === $this->config['bruteForceDriver']) && $this->config['dbHost'] && $this->config['dbName']) {
+			$this->db = new \PDO(
+				"mysql:host={$this->config['dbHost']};dbname={$this->config['dbName']};port={$this->config['dbPort']};charset=utf8",
+				$this->config['dbUser'],
+				$this->config['dbPass']
+			);
+			$this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+			$this->db->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+		}
+		$this->checkBruteForce();
 	}
 
 	/**
@@ -102,34 +107,35 @@ class Client
 	protected function request(string $method, string $uri = '', array $options = [])
 	{
 		try {
+			$startTime = microtime(true);
 			$response = $this->httpClient->request($method, $uri, $options);
 			$body = $response->getBody()->getContents();
 			if ($this->debug) {
-				$this->logs[] = [
+				$this->log('logs', [
+					'requestTime' => round(microtime(true) - $startTime, 2),
 					'uri' => $uri,
 					'method' => $method,
 					'options' => $options,
-					'statusCode' => $response->getStatusCode(),
+					'code' => $response->getStatusCode(),
 					'reasonPhrase' => $response->getReasonPhrase(),
 					'protocol' => $response->getProtocolVersion(),
 					'headers' => array_map(function ($value) {
 						return implode(', ', $value);
 					}, $response->getHeaders()),
 					'responseBody' => $body,
-				];
+				]);
 			}
 		} catch (\Throwable $th) {
-			$this->error[] = array_merge(
+			$this->log('error', array_merge(
 				[
 					'type' => 'httpClientException',
-					'datetime' => date('Y-m-d H:i:s'),
 					'uri' => $uri,
 					'method' => $method,
 					'message' => $th->getMessage(),
 					'options' => $options,
 				],
 				$this->parserErrorResponse($th)
-			);
+			));
 			throw $th;
 		}
 		return $body;
@@ -150,16 +156,15 @@ class Client
 			'json' => $data
 		]), true);
 		if (isset($return['error'])) {
-			$this->error[] = array_merge(
+			$this->log('error', array_merge(
 				[
 					'type' => 'crmException',
-					'datetime' => date('Y-m-d H:i:s'),
 					'uri' => $uri,
 					'method' => $method,
 					'data' => $data,
 				],
 				$this->parserErrorResponse($return)
-			);
+			));
 			throw new \Exception($return['error']['message'], $return['error']['code'] ?? 500);
 		}
 		return $return;
@@ -174,7 +179,7 @@ class Client
 	 *
 	 * @return array
 	 */
-	protected function parserErrorResponse($error): array
+	public function parserErrorResponse($error): array
 	{
 		$return = [];
 		if (\is_object($error)) {
@@ -215,23 +220,113 @@ class Client
 		return $return;
 	}
 
-	/**
-	 * Get logs function.
-	 *
-	 * @return array
-	 */
-	public function getLogs(): array
+	public function log(string $type, array $params)
 	{
-		return $this->logs;
+		$isError = 'error' === $type || 'proxy_error' === $type;
+		if ('db' === $this->config['logDriver']) {
+			$data = [
+				'datetime' => date('Y-m-d H:i:s'),
+				'code' => $params['code'] ?? 0,
+				'method' => $params['method'] ?? '',
+				'uri' => $params['uri'] ?? '',
+			];
+			if ($isError) {
+				$data['type'] = $params['type'] ?? '';
+				$data['message'] = $params['message'] ?? '';
+			} else {
+				$data['reason_phrase'] = $params['reasonPhrase'] ?? '';
+				$data['request_time'] = $params['requestTime'] ?? '';
+			}
+			$params['$_REQUEST'] = print_r($_REQUEST, true);
+			$params['$_SERVER'] = print_r($_SERVER, true);
+			unset($params['type'], $params['code'], $params['message'], $params['reasonPhrase'], $params['uri'], $params['method'], $params['requestTime']);
+			$data['params'] = print_r($params, true);
+			$columns = implode('`,`', array_keys($data));
+			$values = implode(',:', array_keys($data));
+			$sth = $this->db->prepare("INSERT INTO `{$type}` (`{$columns}`) VALUES (:{$values})");
+			foreach ($data as $key => $value) {
+				$sth->bindValue(':' . $key, $value);
+			}
+			$sth->execute();
+		} else {
+			if ($isError) {
+				$logRow = date('H:i:s') . " [{$params['type']}] |{$params['code']}| {$params['message']} | {$params['method']}] {$params['uri']}" . PHP_EOL;
+			} else {
+				$logRow = date('H:i:s') . " [{$params['method']}] {$params['uri']} | {$params['code']} - {$params['reasonPhrase']} [{$params['requestTime']}s]" . PHP_EOL;
+			}
+			unset($params['type'], $params['code'], $params['message'], $params['reasonPhrase'], $params['uri'], $params['method'], $params['requestTime']);
+			if ($params) {
+				$logRow .= print_r($params, true) . PHP_EOL;
+			}
+			if (0 === strpos($type, 'proxy_')) {
+				$logRow .= 'input:' . file_get_contents('php://input') . PHP_EOL;
+				if ($_REQUEST) {
+					$logRow .= '$_REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL;
+				}
+			}
+			$logRow .= '$_SERVER:' . print_r($_SERVER, true);
+			$logRow .= str_repeat('=', 100) . PHP_EOL;
+			file_put_contents($this->logPath . date('Y-m-d') . '.log', $logRow, FILE_APPEND);
+			if ($isError) {
+				$this->error[] = $logRow;
+			} else {
+				$this->logs[] = $logRow;
+			}
+		}
 	}
 
-	/**
-	 * Get errors function.
-	 *
-	 * @return array
-	 */
-	public function getErrors(): array
+	public function checkBruteForce()
 	{
-		return $this->error;
+		$ip = $_SERVER['REMOTE_ADDR'];
+		if (empty($this->config['bruteForceDayLimit']) || (!empty($this->config['bruteForceTrustedIp']) && \in_array($ip, $this->config['bruteForceTrustedIp']))) {
+			return true;
+		}
+		if ('db' === $this->config['bruteForceDriver']) {
+			$sth = $this->db->prepare('SELECT * FROM `bruteforce` WHERE `ip` = :ip');
+			$sth->execute([':ip' => $ip]);
+			$row = $sth->fetch(\PDO::FETCH_ASSOC);
+			if (empty($row)) {
+				$statement = $this->db->prepare('INSERT INTO `bruteforce` (`ip`,`last_request`) VALUES (:ip,:last_request)');
+				$statement->bindValue(':ip', $ip);
+				$statement->bindValue(':last_request', date('Y-m-d H:i:s'));
+				$statement->execute();
+			} else {
+				$statement = $this->db->prepare('UPDATE `bruteforce` SET `last_request`=:last_request,`counter`=:counter WHERE `ip` = :ip');
+				$statement->bindValue(':ip', $ip);
+				$statement->bindValue(':last_request', date('Y-m-d H:i:s'));
+				if (date('Y-m-d', strtotime($row['last_request'])) === date('Y-m-d')) {
+					$statement->bindValue(':counter', (int) $row['counter'] + 1);
+				} else {
+					$statement->bindValue(':counter', 1);
+				}
+				$statement->execute();
+				if ((int) $row['counter'] > (int) $this->config['bruteForceDayLimit']) {
+					throw new \Exception('Day limit exceeded |' . $ip);
+				}
+			}
+		} elseif ('apcu' === $this->config['bruteForceDriver']) {
+			if (\function_exists('apcu_enabled') && apcu_enabled()) {
+				throw new \Exception('APCu is not working');
+			}
+			$cacheKay = ($this->config['bruteForceApcuKey'] ?? 'YetiForceRestApi') . $ip;
+			if (apcu_exists($cacheKay)) {
+				$row = apcu_fetch($cacheKay);
+				if (date('Y-m-d', strtotime($row['last_request'])) === date('Y-m-d')) {
+					$row['counter'] = $row['counter'] + 1;
+				} else {
+					$row['counter'] = 1;
+				}
+				$row['last_request'] = date('Y-m-d H:i:s');
+				apcu_store($cacheKay, $row, 0);
+				if ($row['counter'] > (int) $this->config['bruteForceDayLimit']) {
+					throw new \Exception('Day limit exceeded |' . $ip);
+				}
+			} else {
+				apcu_store($cacheKay, [
+					'last_request' => date('Y-m-d H:i:s'),
+					'counter' => 1,
+				], 0);
+			}
+		}
 	}
 }
