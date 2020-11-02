@@ -66,22 +66,7 @@ class Client
 		if (!empty($this->config['options']) && \is_array($this->config['options'])) {
 			$this->options = array_merge($this->options, $this->config['options']);
 		}
-		$this->initDrivers();
-		$caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
-		$this->options['verify'] = \is_file($caPathOrFile) ? $caPathOrFile : false;
-		$this->options['base_uri'] = $this->config['apiPath'] . 'webservice/';
-		$this->options['auth'] = [$this->config['wsAppName'], $this->config['wsAppPass']];
-		$this->options['headers']['x-api-key'] = $this->config['wsApiKey'];
-		$this->httpClient = new \GuzzleHttp\Client($this->options);
-	}
-
-	/**
-	 * Driver initialization.
-	 *
-	 * @return void
-	 */
-	protected function initDrivers(): void
-	{
+		$this->debug = $this->config['debug'] ?? false;
 		$this->config['logDriver'] = $this->config['logDriver'] ?? 'file';
 		if (('db' === $this->config['logDriver'] || 'db' === $this->config['bruteForceDriver']) && $this->config['dbHost'] && $this->config['dbName']) {
 			$this->db = new \PDO(
@@ -92,7 +77,22 @@ class Client
 			$this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 			$this->db->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
 		}
+	}
+
+	/**
+	 * Driver initialization.
+	 *
+	 * @return void
+	 */
+	public function init(): void
+	{
 		$this->checkBruteForce();
+		$caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
+		$this->options['verify'] = \is_file($caPathOrFile) ? $caPathOrFile : false;
+		$this->options['base_uri'] = $this->config['apiPath'] . 'webservice/';
+		$this->options['auth'] = [$this->config['wsAppName'], $this->config['wsAppPass']];
+		$this->options['headers']['x-api-key'] = $this->config['wsApiKey'];
+		$this->httpClient = new \GuzzleHttp\Client($this->options);
 	}
 
 	/**
@@ -110,6 +110,8 @@ class Client
 			$startTime = microtime(true);
 			$response = $this->httpClient->request($method, $uri, $options);
 			$body = $response->getBody()->getContents();
+			// var_dump($body);
+			// exit;
 			if ($this->debug) {
 				$this->log('logs', [
 					'requestTime' => round(microtime(true) - $startTime, 2),
@@ -126,7 +128,8 @@ class Client
 				]);
 			}
 		} catch (\Throwable $th) {
-			$this->log('error', array_merge(
+			// echo $th->__toString();
+			$this->log('errors', array_merge(
 				[
 					'type' => 'httpClientException',
 					'uri' => $uri,
@@ -156,7 +159,7 @@ class Client
 			'json' => $data
 		]), true);
 		if (isset($return['error'])) {
-			$this->log('error', array_merge(
+			$this->log('errors', array_merge(
 				[
 					'type' => 'crmException',
 					'uri' => $uri,
@@ -222,7 +225,8 @@ class Client
 
 	public function log(string $type, array $params)
 	{
-		$isError = 'error' === $type || 'proxy_error' === $type;
+		$isError = 'errors' === $type || 'proxy_errors' === $type;
+		$isProxy = 0 === strpos($type, 'proxy_');
 		if ('db' === $this->config['logDriver']) {
 			$data = [
 				'datetime' => date('Y-m-d H:i:s'),
@@ -230,9 +234,12 @@ class Client
 				'method' => $params['method'] ?? '',
 				'uri' => $params['uri'] ?? '',
 			];
+			if ($isProxy) {
+				$data['ip'] = $_SERVER['REMOTE_ADDR'];
+			}
 			if ($isError) {
 				$data['type'] = $params['type'] ?? '';
-				$data['message'] = $params['message'] ?? '';
+				$data['message'] = mb_substr($params['message'] ?? '', 0, 255, 'UTF-8');
 			} else {
 				$data['reason_phrase'] = $params['reasonPhrase'] ?? '';
 				$data['request_time'] = $params['requestTime'] ?? '';
@@ -258,7 +265,7 @@ class Client
 			if ($params) {
 				$logRow .= print_r($params, true) . PHP_EOL;
 			}
-			if (0 === strpos($type, 'proxy_')) {
+			if ($isProxy) {
 				$logRow .= 'input:' . file_get_contents('php://input') . PHP_EOL;
 				if ($_REQUEST) {
 					$logRow .= '$_REQUEST: ' . print_r($_REQUEST, true) . PHP_EOL;
@@ -301,28 +308,28 @@ class Client
 				}
 				$statement->execute();
 				if ((int) $row['counter'] > (int) $this->config['bruteForceDayLimit']) {
-					throw new \Exception('Day limit exceeded |' . $ip);
+					throw new \Exception('Day limit exceeded | ' . $ip, 1100);
 				}
 			}
 		} elseif ('apcu' === $this->config['bruteForceDriver']) {
-			if (\function_exists('apcu_enabled') && apcu_enabled()) {
-				throw new \Exception('APCu is not working');
+			if (!\App\Cache::isApcu()) {
+				throw new \Exception('APCu is not working', 1101);
 			}
-			$cacheKay = ($this->config['bruteForceApcuKey'] ?? 'YetiForceRestApi') . $ip;
-			if (apcu_exists($cacheKay)) {
-				$row = apcu_fetch($cacheKay);
+			$cacheKay = ($this->config['bruteForceApcuKey'] ?? 'YetiForceRestApi_') . $ip;
+			if (\App\Cache::has($cacheKay)) {
+				$row = \App\Cache::get($cacheKay);
 				if (date('Y-m-d', strtotime($row['last_request'])) === date('Y-m-d')) {
 					$row['counter'] = $row['counter'] + 1;
 				} else {
 					$row['counter'] = 1;
 				}
 				$row['last_request'] = date('Y-m-d H:i:s');
-				apcu_store($cacheKay, $row, 0);
+				\App\Cache::save($cacheKay, $row, 0);
 				if ($row['counter'] > (int) $this->config['bruteForceDayLimit']) {
-					throw new \Exception('Day limit exceeded |' . $ip);
+					throw new \Exception('Day limit exceeded | ' . $ip, 1100);
 				}
 			} else {
-				apcu_store($cacheKay, [
+				\App\Cache::save($cacheKay, [
 					'last_request' => date('Y-m-d H:i:s'),
 					'counter' => 1,
 				], 0);
