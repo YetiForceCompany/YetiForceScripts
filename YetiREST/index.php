@@ -7,7 +7,6 @@
  *
  * @version 1.0
  */
-
 require __DIR__ . '/vendor/autoload.php';
 
 /*
@@ -25,6 +24,22 @@ try {
 		$api->init();
 		if ($login = $api->login()) {
 			print_r($api->listModules());
+
+			// print_r($api->listModules());
+
+			// print_r($api->getRecord('Contacts', 634));
+
+			// print_r($api->listRecords('Contacts', []));
+
+			// print_r($api->createRecord('Contacts', [
+			// 	'firstname' => 'xxx',
+			// 	'lastname' => 'yyy',
+			// ]));
+
+			// print_r($api->updateRecord('Contacts', 421637, [
+			// 	'firstname' => 'xxx',
+			// 	'lastname' => 'yy222y',
+			// ]));
 		}
 	} catch (\Throwable $th) {
 		$api->log('proxy_errors', $api->parserErrorResponse($th));

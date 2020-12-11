@@ -144,19 +144,6 @@ class Portal extends Client
 	}
 
 	/**
-	 * Create new record for module.
-	 *
-	 * @param string $module
-	 *
-	 * @return array
-	 */
-	public function createRecord(string $module): array
-	{
-		$return = $this->json('POST', "{$module}/Record/Save");
-		return $return['status'] ? $return['result'] : [];
-	}
-
-	/**
 	 * List records for module.
 	 *
 	 * @param string $module
@@ -199,16 +186,31 @@ class Portal extends Client
 	}
 
 	/**
+	 * Create new record for module.
+	 *
+	 * @param string $module
+	 * @param array  $params
+	 *
+	 * @return array
+	 */
+	public function createRecord(string $module, array $params): array
+	{
+		$return = $this->json('POST', "{$module}/Record", $params);
+		return $return['status'] ? $return['result'] : [];
+	}
+
+	/**
 	 * Save record with id for module update.
 	 *
 	 * @param string $module
 	 * @param int    $id
+	 * @param array  $params
 	 *
 	 * @return array
 	 */
-	public function updateRecord(string $module, int $id): array
+	public function updateRecord(string $module, int $id, array $params): array
 	{
-		$return = $this->json('PUT', "{$module}/Record/{$id}");
+		$return = $this->json('PUT', "{$module}/Record/{$id}", $params);
 		return $return['status'] ? $return['result'] : [];
 	}
 

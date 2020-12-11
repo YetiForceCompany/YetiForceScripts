@@ -68,7 +68,7 @@ class Client
 		}
 		$this->debug = $this->config['debug'] ?? false;
 		$this->config['logDriver'] = $this->config['logDriver'] ?? 'file';
-		if (('db' === $this->config['logDriver'] || 'db' === $this->config['bruteForceDriver']) && $this->config['dbHost'] && $this->config['dbName']) {
+		if (('db' === $this->config['logDriver'] || 'db' === ($this->config['bruteForceDriver'] ?? '')) && $this->config['dbHost'] && $this->config['dbName']) {
 			$this->db = new \PDO(
 				"mysql:host={$this->config['dbHost']};dbname={$this->config['dbName']};port={$this->config['dbPort']};charset=utf8",
 				$this->config['dbUser'],
@@ -87,8 +87,10 @@ class Client
 	public function init(): void
 	{
 		$this->checkBruteForce();
-		$caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
-		$this->options['verify'] = \is_file($caPathOrFile) ? $caPathOrFile : false;
+		if (!isset($this->options['verify'])) {
+			$caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
+			$this->options['verify'] = \is_file($caPathOrFile) ? $caPathOrFile : false;
+		}
 		$this->options['base_uri'] = $this->config['apiPath'] . 'webservice/';
 		$this->options['auth'] = [$this->config['wsAppName'], $this->config['wsAppPass']];
 		$this->options['headers']['x-api-key'] = $this->config['wsApiKey'];
@@ -110,8 +112,6 @@ class Client
 			$startTime = microtime(true);
 			$response = $this->httpClient->request($method, $uri, $options);
 			$body = $response->getBody()->getContents();
-			// var_dump($body);
-			// exit;
 			if ($this->debug) {
 				$this->log('logs', [
 					'requestTime' => round(microtime(true) - $startTime, 2),
@@ -194,8 +194,7 @@ class Client
 				$return['method'] = $error->getRequest()->getMethod();
 				$return['protocol'] = $error->getRequest()->getProtocolVersion();
 			}
-			if (method_exists($error, 'getResponse')) {
-				$response = $error->getResponse();
+			if (method_exists($error, 'getResponse') && ($response = $error->getResponse())) {
 				$body = $response->getBody()->getContents();
 				$return = [
 					'code' => $response->getStatusCode(),
@@ -246,7 +245,7 @@ class Client
 			}
 			$params['$_REQUEST'] = print_r($_REQUEST, true);
 			$params['$_SERVER'] = print_r($_SERVER, true);
-			unset($params['type'], $params['code'], $params['message'], $params['reasonPhrase'], $params['uri'], $params['method'], $params['requestTime']);
+			unset($params['code'], $params['message'], $params['reasonPhrase'], $params['uri'],  $params['requestTime']);
 			$data['params'] = print_r($params, true);
 			$columns = implode('`,`', array_keys($data));
 			$values = implode(',:', array_keys($data));
@@ -257,7 +256,11 @@ class Client
 			$sth->execute();
 		} else {
 			if ($isError) {
-				$logRow = date('H:i:s') . " [{$params['type']}] |{$params['code']}| {$params['message']} | {$params['method']}] {$params['uri']}" . PHP_EOL;
+				if (isset($params['type'],$params['method'],$params['uri'])) {
+					$logRow = date('H:i:s') . " [{$params['type']}] |{$params['code']}| {$params['message']} | {$params['method']}] {$params['uri']}" . PHP_EOL;
+				} else {
+					$logRow = date('H:i:s') . " {$params['code']}| {$params['message']}" . PHP_EOL;
+				}
 			} else {
 				$logRow = date('H:i:s') . " [{$params['method']}] {$params['uri']} | {$params['code']} - {$params['reasonPhrase']} [{$params['requestTime']}s]" . PHP_EOL;
 			}
