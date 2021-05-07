@@ -1,6 +1,8 @@
 # YetiForceRestApi
 
+```
 apiPath =  __CRM_URL__/webservice/
+```
 
 ## configuration file
 
