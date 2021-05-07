@@ -4,7 +4,7 @@
 apiPath =  __CRM_URL__/webservice/
 ```
 
-## configuration file
+## Configuration file
 
 ```php
 return [
@@ -25,7 +25,7 @@ return [
 ];
 ```
 
-## database structure [optional]
+## Database structure [optional]
 
 bruteforce table [optional]
 
