@@ -35,23 +35,6 @@ class Portal extends Client
 	];
 
 	/**
-	 * Parse headers.
-	 *
-	 * @param string $method
-	 * @param array  $params
-	 *
-	 * @return string[]
-	 */
-	protected function parseHeaders(string $method, array $params): array
-	{
-		$headers = [];
-		foreach ($params as $key => $value) {
-			$headers[] = static::$headers[$method][$key] = \is_array($value) ? json_encode($value) : $value;
-		}
-		return $headers;
-	}
-
-	/**
 	 * Login function.
 	 *
 	 * @param string $userName
@@ -239,5 +222,26 @@ class Portal extends Client
 	{
 		$return = $this->json('DELETE', "{$module}/Record/{$id}");
 		return $return['status'] ? $return['result'] : [];
+	}
+
+	/**
+	 * Parse headers.
+	 *
+	 * @param string $method
+	 * @param array  $params
+	 *
+	 * @return string[]
+	 */
+	protected function parseHeaders(string $method, array $params): array
+	{
+		$headers = [];
+		foreach ($params as $key => $value) {
+			if (isset(static::$headers[$method][$key])) {
+				$headers[static::$headers[$method][$key]] = \is_array($value) ? json_encode($value) : $value;
+			} else {
+				throw new \Exception('Parameter not found: ' . $key);
+			}
+		}
+		return $headers;
 	}
 }

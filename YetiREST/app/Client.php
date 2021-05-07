@@ -91,7 +91,7 @@ class Client
 			$caPathOrFile = \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
 			$this->options['verify'] = \is_file($caPathOrFile) ? $caPathOrFile : false;
 		}
-		$this->options['base_uri'] = $this->config['apiPath'] . 'webservice/';
+		$this->options['base_uri'] = $this->config['apiPath'];
 		$this->options['auth'] = [$this->config['wsAppName'], $this->config['wsAppPass']];
 		$this->options['headers']['x-api-key'] = $this->config['wsApiKey'];
 		$this->httpClient = new \GuzzleHttp\Client($this->options);
@@ -150,13 +150,15 @@ class Client
 	 * @param string $method
 	 * @param string $uri
 	 * @param array  $data
+	 * @param array  $headers
 	 *
 	 * @return array
 	 */
-	public function json(string $method, string $uri = '', array $data = []): array
+	public function json(string $method, string $uri = '', array $data = [], array $headers = []): array
 	{
 		$return = json_decode($this->request($method, $uri, [
-			'json' => $data
+			'json' => $data,
+			'headers' => $headers
 		]), true);
 		if (isset($return['error'])) {
 			$this->log('errors', array_merge(
@@ -287,8 +289,8 @@ class Client
 
 	public function checkBruteForce()
 	{
-		$ip = $_SERVER['REMOTE_ADDR'];
-		if (empty($this->config['bruteForceDayLimit']) || (!empty($this->config['bruteForceTrustedIp']) && \in_array($ip, $this->config['bruteForceTrustedIp']))) {
+		$ip = $_SERVER['REMOTE_ADDR'] ?? '';
+		if (empty($ip) || empty($this->config['bruteForceDayLimit']) || (!empty($this->config['bruteForceTrustedIp']) && \in_array($ip, $this->config['bruteForceTrustedIp']))) {
 			return true;
 		}
 		if ('db' === $this->config['bruteForceDriver']) {
