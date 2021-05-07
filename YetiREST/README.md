@@ -1,10 +1,12 @@
 # YetiForceRestApi
 
+apiPath =  __CRM_URL__/webservice/
+
 ## configuration file
 
 ```php
 return [
-	'apiPath' => 'https://gitdeveloper.yetiforce.com/',
+	'apiPath' => 'https://gitdeveloper.yetiforce.com/webservice/',
 	'wsAppName' => 'portal',
 	'wsAppPass' => 'portal',
 	'wsApiKey' => 'VMUwRByXHSq1bLW485ikfvcC97P6gJsz',
