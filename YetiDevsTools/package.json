@@ -21,7 +21,7 @@
     "clean-css": "^4.2.1",
     "findit": "^2.0.0",
     "gulp": "^3.9.1",
-    "gulp-autoprefixer": "^6.0.0",
+    "gulp-autoprefixer": "^8.0.0",
     "gulp-clean-css": "^3.9.4",
     "gulp-css-purge": "^3.0.8",
     "gulp-purifycss": "^0.2.0",
