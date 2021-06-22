@@ -158,7 +158,7 @@ class Client
 	{
 		$return = json_decode($this->request($method, $uri, [
 			'json' => $data,
-			'headers' => $headers
+			'headers' => $headers,
 		]), true);
 		if (isset($return['error'])) {
 			$this->log('errors', array_merge(
