@@ -1,4 +1,4 @@
-# YetiForceRestApi SDK
+# YetiForce RestApi SDK
 
 ```
 apiPath =  __CRM_URL__/webservice/   
