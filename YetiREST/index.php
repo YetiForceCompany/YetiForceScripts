@@ -28,10 +28,10 @@ try {
 			// Show list modules.
 			print_r($api->listModules());
 
-			// Get record details
+			// Show record details
 			print_r($api->getRecord('Contacts', 634));
 
-			// Get records list
+			// Show records list
 			print_r($api->listRecords('Contacts', []));
 
 			// Create new record
