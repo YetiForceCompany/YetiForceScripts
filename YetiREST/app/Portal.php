@@ -126,7 +126,7 @@ class Portal extends Client
 	}
 
 	/**
-	 * Related list records.
+	 * List related records.
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\RecordRelatedList::get
 	 *
