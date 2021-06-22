@@ -141,7 +141,7 @@ class Portal extends Client
 	}
 
 	/**
-	 * List records for module.
+	 * Related list records for module.
 	 *
 	 * @param string $module
 	 * @param array  $params
