@@ -1,9 +1,8 @@
-# YetiForceRestApi
+# YetiForceRestApi SDK
 
 ```
-apiPath =  __CRM_URL__/webservice/
+apiPath =  __CRM_URL__/webservice/   
 ```
-
 ## Configuration file
 
 ```php
