@@ -4,6 +4,8 @@
 
 @install: Copy to the CRM_ROOT/public_html directory
 
-@run: Set variable $userId or $userName and run the script
+@set: Set variable $userId or $userName and run the script
+
+@run: WWW: https://gitdeveloper.yetiforce.com/PasswordReset.php OR CLI: php **CRM_DIR_PATH**/PasswordReset.php
 
 @version >= 4.3.0
