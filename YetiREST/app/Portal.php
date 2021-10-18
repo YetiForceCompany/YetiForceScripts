@@ -16,20 +16,25 @@ class Portal extends Client
 	/** @var array Headers mapping. */
 	protected static $headers = [
 		'listRecords' => [
-			'condition' => 'X-CONDITION',
-			'offset' => 'X-ROW-OFFSET',
-			'limit' => 'X-ROW-LIMIT',
-			'fields' => 'X-FIELDS',
-			'order' => 'X-ORDER-BY',
-			'rawData' => 'X-RAW-DATA',
+			'condition' => 'x-condition',
+			'offset' => 'x-row-offset',
+			'limit' => 'x-row-limit',
+			'fields' => 'x-fields',
+			'order' => 'x-order-by',
+			'rawData' => 'x-raw-data',
 		],
 		'listRelatedRecords' => [
-			'rawData' => 'X-RAW-DATA',
-			'offset' => 'X-ROW-OFFSET',
-			'limit' => 'X-ROW-LIMIT',
-			'fields' => 'X-FIELDS',
-			'parentId' => 'X-PARENT-ID',
-			'condition' => 'X-CONDITION',
+			'rawData' => 'x-raw-data',
+			'offset' => 'x-row-offset',
+			'limit' => 'x-row-limit',
+			'fields' => 'x-fields',
+			'parentId' => 'x-parent-id',
+			'condition' => 'x-condition',
+			'rowCount' => 'x-row-count',
+			'order' => 'x-order-by',
+		],
+		'fields' => [
+			'response' => 'x-response-params',
 		],
 	];
 
@@ -99,13 +104,13 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\Privileges::get
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 *
 	 * @return array
 	 */
-	public function privileges(string $module): array
+	public function privileges(string $moduleName): array
 	{
-		$return = $this->json('GET', "{$module}/Privileges");
+		$return = $this->json('GET', "{$moduleName}/Privileges");
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -114,14 +119,14 @@ class Portal extends Client
 	 *
 	 * @see  https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\RecordsList::get
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 * @param array  $params
 	 *
 	 * @return array
 	 */
-	public function listRecords(string $module, array $params): array
+	public function listRecords(string $moduleName, array $params): array
 	{
-		$return = $this->json('GET', "{$module}/RecordsList", [], $this->parseHeaders('listRecords', $params));
+		$return = $this->json('GET', "{$moduleName}/RecordsList", [], $this->parseHeaders('listRecords', $params));
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -130,14 +135,16 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\RecordRelatedList::get
 	 *
-	 * @param string $module
+	 * @param string $moduleName
+	 * @param int    $recordId
+	 * @param string $relatedModuleName
 	 * @param array  $params
 	 *
 	 * @return array
 	 */
-	public function listRelatedRecords(string $module, array $params): array
+	public function listRelatedRecords(string $moduleName, int $recordId, string $relatedModuleName, array $params): array
 	{
-		$return = $this->json('GET', "{$module}/RecordRelatedList", [], $this->parseHeaders('listRelatedRecords', $params));
+		$return = $this->json('GET', "{$moduleName}/RecordRelatedList/$recordId/$relatedModuleName", [], $this->parseHeaders('listRelatedRecords', $params));
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -146,14 +153,14 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/getRecord
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 * @param int    $id
 	 *
 	 * @return array
 	 */
-	public function getRecord(string $module, int $id): array
+	public function getRecord(string $moduleName, int $id): array
 	{
-		$return = $this->json('GET', "{$module}/Record/{$id}");
+		$return = $this->json('GET', "{$moduleName}/Record/{$id}");
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -162,14 +169,14 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\Record::post
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 * @param array  $params
 	 *
 	 * @return array
 	 */
-	public function createRecord(string $module, array $params): array
+	public function createRecord(string $moduleName, array $params): array
 	{
-		$return = $this->json('POST', "{$module}/Record", $params);
+		$return = $this->json('POST', "{$moduleName}/Record", $params);
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -178,15 +185,15 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\Record::put
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 * @param int    $id
 	 * @param array  $params
 	 *
 	 * @return array
 	 */
-	public function updateRecord(string $module, int $id, array $params): array
+	public function updateRecord(string $moduleName, int $id, array $params): array
 	{
-		$return = $this->json('PUT', "{$module}/Record/{$id}", $params);
+		$return = $this->json('PUT', "{$moduleName}/Record/{$id}", $params);
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -195,13 +202,14 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\Fields::get
 	 *
-	 * @param string $module
+	 * @param string $moduleName
+	 * @param array  $params
 	 *
 	 * @return array
 	 */
-	public function fields(string $module): array
+	public function fields(string $moduleName, array $params): array
 	{
-		$return = $this->json('GET', "{$module}/Fields");
+		$return = $this->json('GET', "{$moduleName}/Fields", [], $this->parseHeaders('fields', $params));
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -210,14 +218,14 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\Record::delete
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 * @param int    $id
 	 *
 	 * @return array
 	 */
-	public function deleteRecord(string $module, int $id): array
+	public function deleteRecord(string $moduleName, int $id): array
 	{
-		$return = $this->json('DELETE', "{$module}/Record/{$id}");
+		$return = $this->json('DELETE', "{$moduleName}/Record/{$id}");
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -226,14 +234,14 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\RecordHistory::get
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 * @param int    $id
 	 *
 	 * @return array
 	 */
-	public function recordHistory(string $module, int $id): array
+	public function recordHistory(string $moduleName, int $id): array
 	{
-		$return = $this->json('GET', "{$module}/RecordHistory/{$id}");
+		$return = $this->json('GET', "{$moduleName}/RecordHistory/{$id}");
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -242,14 +250,14 @@ class Portal extends Client
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\RelatedModules::get
 	 *
-	 * @param string $module
+	 * @param string $moduleName
 	 * @param int    $id
 	 *
 	 * @return array
 	 */
-	public function relatedModules(string $module, int $id): array
+	public function relatedModules(string $moduleName, int $id): array
 	{
-		$return = $this->json('GET', "{$module}/RelatedModules/{$id}");
+		$return = $this->json('GET', "{$moduleName}/RelatedModules/{$id}");
 		return $return['status'] ? $return['result'] : [];
 	}
 
