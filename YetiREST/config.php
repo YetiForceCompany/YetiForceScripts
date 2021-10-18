@@ -8,7 +8,7 @@
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  */
 return [
-	'apiPath' => 'https://gitdeveloper.yetiforce.com/webservice/Portal',
+	'apiPath' => 'https://gitdeveloper.yetiforce.com/webservice/Portal/',
 	'wsAppName' => 'portal',
 	'wsAppPass' => 'portal',
 	'wsApiKey' => 'VMUwRByXHSq1bLW485ikfvcC97P6gJsz',
