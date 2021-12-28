@@ -5,6 +5,10 @@ apiPath =  __CRM_URL__/webservice/RestApi/
 ```
 ## Configuration file
 
+ * apiPath must end with an `__CRM_URL__/webservice/`.
+ * For CRM versions greater than 6.1.255, you need to add: RestApi , Portal. `__CRM_URL__/webservice/RestApi/`.
+ * For CRM versions greater than 6.3, you need to add: WebserviceStandard , WebservicePremium. `__CRM_URL__/webservice/RestApi/`.
+ 
 ```php
 return [
 	'apiPath' => 'https://gitdeveloper.yetiforce.com/webservice/RestApi/',
