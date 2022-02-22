@@ -1,17 +1,17 @@
 # YetiForce RestApi SDK
 
 ```
-apiPath =  __CRM_URL__/webservice/RestApi/   
+apiPath =  __CRM_URL__/webservice/WebserviceStandard/   
 ```
 ## Configuration file
 
  * apiPath must end with an `__CRM_URL__/webservice/`.
  * For CRM versions greater than 6.1.255, you need to add: RestApi , Portal. `__CRM_URL__/webservice/RestApi/`.
- * For CRM versions greater than 6.3, you need to add: WebserviceStandard , WebservicePremium. `__CRM_URL__/webservice/RestApi/`.
+ * For CRM versions greater than 6.3, you need to add: WebserviceStandard , WebservicePremium. `__CRM_URL__/webservice/WebserviceStandard/`.
  
 ```php
 return [
-	'apiPath' => 'https://gitdeveloper.yetiforce.com/webservice/RestApi/',
+	'apiPath' => 'https://gitdeveloper.yetiforce.com/webservice/WebserviceStandard/',
 	'wsAppName' => 'portal',
 	'wsAppPass' => 'portal',
 	'wsApiKey' => 'VMUwRByXHSq1bLW485ikfvcC97P6gJsz',
