@@ -1,9 +1,9 @@
 <?php
 /**
  * Configuration file.
- * apiPath must end with an `__CRM_URL__/webservice/`.
+ * apiPath/apiSiteUrl must end with an `__CRM_URL__/webservice/`.
  * For CRM versions greater than 6.1.255, you need to add: RestApi , Portal. `__CRM_URL__/webservice/RestApi/`.
- * For CRM versions greater than 6.3, you need to add: WebserviceStandard , WebservicePremium. `__CRM_URL__/webservice/RestApi/`.
+ * For CRM versions greater than 6.3, you need to add: WebserviceStandard , WebservicePremium. `__CRM_URL__/webservice/WebserviceStandard/`.
  *
  * @copyright YetiForce Sp. z o.o
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>

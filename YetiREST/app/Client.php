@@ -4,6 +4,8 @@
  *
  * @copyright YetiForce Sp. z o.o
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ *
+ * @version 1.2
  */
 
 namespace App;
@@ -156,10 +158,14 @@ class Client
 	 */
 	public function json(string $method, string $uri = '', array $data = [], array $headers = []): array
 	{
-		$return = json_decode($this->request($method, $uri, [
+		$response = $this->request($method, $uri, [
 			'json' => $data,
 			'headers' => $headers,
-		]), true);
+		]);
+		if (!$this->isJson($response)) {
+			throw new \Exception('No JSON content:' . PHP_EOL . $response);
+		}
+		$return = json_decode($response, true);
 		if (isset($return['error'])) {
 			$this->log('errors', array_merge(
 				[
@@ -224,6 +230,12 @@ class Client
 		return $return;
 	}
 
+	public function isJson($string)
+	{
+		json_decode($string);
+		return JSON_ERROR_NONE === json_last_error();
+	}
+
 	public function log(string $type, array $params)
 	{
 		$isError = 'errors' === $type || 'proxy_errors' === $type;
@@ -233,21 +245,22 @@ class Client
 				'datetime' => date('Y-m-d H:i:s'),
 				'code' => $params['code'] ?? 0,
 				'method' => $params['method'] ?? '',
-				'uri' => $params['uri'] ?? '',
+				'uri' => mb_substr($params['uri'] ?? '', 0, 255, 'UTF-8'),
 			];
 			if ($isProxy) {
 				$data['ip'] = $_SERVER['REMOTE_ADDR'];
 			}
 			if ($isError) {
-				$data['type'] = $params['type'] ?? '';
+				$data['type'] = mb_substr($params['type'] ?? '', 0, 20, 'UTF-8');
 				$data['message'] = mb_substr($params['message'] ?? '', 0, 255, 'UTF-8');
 			} else {
-				$data['reason_phrase'] = $params['reasonPhrase'] ?? '';
+				$data['reason_phrase'] = mb_substr($params['reasonPhrase'] ?? '', 0, 255, 'UTF-8');
 				$data['request_time'] = $params['requestTime'] ?? '';
+				$data['response'] = mb_substr($params['responseBody'] ?? '', 0, 16777215, 'UTF-8');
 			}
 			$params['$_REQUEST'] = print_r($_REQUEST, true);
 			$params['$_SERVER'] = print_r($_SERVER, true);
-			unset($params['code'], $params['message'], $params['reasonPhrase'], $params['uri'],  $params['requestTime']);
+			unset($params['code'], $params['message'], $params['reasonPhrase'], $params['uri'],  $params['requestTime'],  $params['responseBody']);
 			$data['params'] = print_r($params, true);
 			$columns = implode('`,`', array_keys($data));
 			$values = implode(',:', array_keys($data));

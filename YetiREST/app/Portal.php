@@ -100,6 +100,17 @@ class Portal extends Client
 	}
 
 	/**
+	 * List methods of Yetiforce REST.
+	 *
+	 * @return string[]
+	 */
+	public function listMethods(): array
+	{
+		$return = $this->json('GET', 'Methods');
+		return $return['status'] ? $return['result'] : [];
+	}
+
+	/**
 	 * Get privileges.
 	 *
 	 * @see https://doc.yetiforce.com/api/#/BaseModule/Api\RestApi\BaseModule\Privileges::get
@@ -111,6 +122,19 @@ class Portal extends Client
 	public function privileges(string $moduleName): array
 	{
 		$return = $this->json('GET', "{$moduleName}/Privileges");
+		return $return['status'] ? $return['result'] : [];
+	}
+
+	/**
+	 * Hierarchy for module.
+	 *
+	 * @param string $module
+	 *
+	 * @return array
+	 */
+	public function hierarchy(string $module): array
+	{
+		$return = $this->json('GET', "{$module}/Hierarchy");
 		return $return['status'] ? $return['result'] : [];
 	}
 
@@ -228,7 +252,7 @@ class Portal extends Client
 		$return = $this->json('DELETE', "{$moduleName}/Record/{$id}");
 		return $return['status'] ? $return['result'] : [];
 	}
-
+	
 	/**
 	 * Get record history.
 	 *
