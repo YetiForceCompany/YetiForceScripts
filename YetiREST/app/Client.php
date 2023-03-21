@@ -2,7 +2,8 @@
 /**
  * Loader file.
  *
- * @copyright YetiForce Sp. z o.o
+ * @copyright YetiForce S.A.
+ * @license   MIT
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  *
  * @version 1.2
@@ -47,9 +48,9 @@ class Client
 	protected $httpClient;
 
 	/**
-	 * Init function.
+	 * Constructor.
 	 *
-	 *	$api = Client::init([
+	 *	$api = new \App\Client([
 	 *	'apiPath' => '',
 	 *	'wsAppName' => '',
 	 *	'wsAppPass' => '',
@@ -58,7 +59,7 @@ class Client
 	 *	'wsUserPass' => '',
 	 * ]);
 	 *
-	 *	$api = Client::init();
+	 *	$api = new \App\Client();
 	 *
 	 * @param array|null $config
 	 */
@@ -123,9 +124,7 @@ class Client
 					'code' => $response->getStatusCode(),
 					'reasonPhrase' => $response->getReasonPhrase(),
 					'protocol' => $response->getProtocolVersion(),
-					'headers' => array_map(function ($value) {
-						return implode(', ', $value);
-					}, $response->getHeaders()),
+					'headers' => array_map(fn ($value) => implode(', ', $value), $response->getHeaders()),
 					'responseBody' => $body,
 				]);
 			}
@@ -207,9 +206,7 @@ class Client
 				$return = [
 					'code' => $response->getStatusCode(),
 					'message' => $response->getReasonPhrase(),
-					'headers' => array_map(function ($value) {
-						return implode(', ', $value);
-					}, $response->getHeaders()),
+					'headers' => array_map(fn ($value) => implode(', ', $value), $response->getHeaders()),
 					'responseBody' => $body,
 				];
 				if (0 === strpos($body, '{"')) {
@@ -254,7 +251,8 @@ class Client
 				$data['type'] = mb_substr($params['type'] ?? '', 0, 20, 'UTF-8');
 				$data['message'] = mb_substr($params['message'] ?? '', 0, 255, 'UTF-8');
 			} else {
-				$data['reason_phrase'] = mb_substr($params['reasonPhrase'] ?? '', 0, 255, 'UTF-8');
+				$data['reason_phrase'] = $params['reasonPhrase'] ?? '';
+				mb_substr($params['reasonPhrase'] ?? '', 0, 255, 'UTF-8');
 				$data['request_time'] = $params['requestTime'] ?? '';
 				$data['response'] = mb_substr($params['responseBody'] ?? '', 0, 16777215, 'UTF-8');
 			}

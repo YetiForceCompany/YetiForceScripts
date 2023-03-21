@@ -1,9 +1,12 @@
 <?php
 /**
- * Cache file.
+ * Loader file.
  *
- * @copyright YetiForce Sp. z o.o
+ * @copyright YetiForce S.A.
+ * @license   MIT
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
+ *
+ * @version 1.2
  */
 
 namespace App;
