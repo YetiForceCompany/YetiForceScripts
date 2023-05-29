@@ -6,7 +6,7 @@
  * @license   MIT
  * @author    Mariusz Krzaczkowski <m.krzaczkowski@yetiforce.com>
  *
- * @version 1.2
+ * @version 1.3
  */
 
 namespace App;
@@ -251,9 +251,8 @@ class Client
 				$data['type'] = mb_substr($params['type'] ?? '', 0, 20, 'UTF-8');
 				$data['message'] = mb_substr($params['message'] ?? '', 0, 255, 'UTF-8');
 			} else {
-				$data['reason_phrase'] = $params['reasonPhrase'] ?? '';
-				mb_substr($params['reasonPhrase'] ?? '', 0, 255, 'UTF-8');
-				$data['request_time'] = $params['requestTime'] ?? '';
+				$data['reason_phrase'] = mb_substr(($params['reasonPhrase'] ?? ''), 0, 255, 'UTF-8');
+				$data['request_time'] = $params['requestTime'] ?? 0;
 				$data['response'] = mb_substr($params['responseBody'] ?? '', 0, 16777215, 'UTF-8');
 			}
 			$params['$_REQUEST'] = print_r($_REQUEST, true);

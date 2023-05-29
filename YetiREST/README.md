@@ -3,12 +3,13 @@
 ```
 apiPath =  __CRM_URL__/webservice/WebserviceStandard/   
 ```
+
 ## Configuration file
 
- * apiPath must end with an `__CRM_URL__/webservice/`.
- * For CRM versions greater than 6.1.255, you need to add: RestApi , Portal. `__CRM_URL__/webservice/RestApi/`.
- * For CRM versions greater than 6.3, you need to add: WebserviceStandard , WebservicePremium. `__CRM_URL__/webservice/WebserviceStandard/`.
- 
+- apiPath must end with an `__CRM_URL__/webservice/`.
+- For CRM versions greater than 6.1.255, you need to add: RestApi , Portal. `__CRM_URL__/webservice/RestApi/`.
+- For CRM versions greater than 6.3, you need to add: WebserviceStandard , WebservicePremium. `__CRM_URL__/webservice/WebserviceStandard/`.
+
 ```php
 return [
 	'apiPath' => 'https://gitdeveloper.yetiforce.com/webservice/WebserviceStandard/',
@@ -49,7 +50,7 @@ CREATE TABLE `errors` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `datetime` datetime NOT NULL,
   `type` varchar(20) NOT NULL,
-  `code` smallint(4) unsigned NOT NULL,
+  `code` varchar(6) NOT NULL,
   `message` varchar(255) NOT NULL,
   `method` varchar(10) NOT NULL,
   `uri` varchar(255) NOT NULL,
